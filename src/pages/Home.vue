@@ -38,6 +38,27 @@
   import DomainCard from '@/components/molecules/DomainCard/DomainCard.vue'
   import db from './../database/domains';
 
+  interface Domain {
+    name: string;
+    previewImageUrl: string;
+    recommendedElements: any[];
+    wikiUrl: string;
+    locations: Location[];
+  }
+
+  interface Location {
+    availability: string[];
+  }
+
+  interface CustomLocation {
+    domainName: string;
+    domainPreviewImage: string;
+    recommendedElements: any[];
+    wikiUrl: string;
+    location: Location;
+  }
+
+
   let dayMap: any = {
     1: 'Monday',
     2: 'Tuesday',
@@ -61,49 +82,46 @@
     unavailableDomains.value = getUnavailableDomains(db)
   })
 
-  const getAvailableDomains = (db: any) => {
-    const locations = Object.entries(db.domains).flatMap(([domain, singleDomain]) => {
-      return singleDomain.flatMap((_domain: any) => {
-        return _domain.locations.filter((location: any) => {
-          return location.availability.includes(dayMap[calculateTime()])
-        }).map((location: any) => {
-          const { name, previewImageUrl, recommendedElements, wikiUrl } = _domain
-          return {
-            domainName: name,
-            domainPreviewImage: previewImageUrl,
-            recommendedElements,
-            wikiUrl,
-            location,
-          }
-        })
-      })
-    })
+  // Domain contains a dictionary of keys of type Domain[]
+  const getAvailableDomains = (db: { domains: { [key: string]: Domain[] } }): CustomLocation[] => {
+    const currentDay = calculateTime();
 
-    return locations;
-  }
-
+    return Object.entries(db.domains)
+      .flatMap(([_, singleDomain]) =>
+        singleDomain.flatMap((domain) =>
+          domain.locations
+            .filter((location) => location.availability.includes(dayMap[currentDay]))
+            .map((location) => ({
+              domainName: domain.name,
+              domainPreviewImage: domain.previewImageUrl,
+              recommendedElements: domain.recommendedElements,
+              wikiUrl: domain.wikiUrl,
+              location,
+            }))
+        )
+      );
+  };
 
 
-  const getUnavailableDomains = (db: any) => {
-    const locations = Object.entries(db.domains).flatMap(([domain, singleDomain]) => {
-      return singleDomain.flatMap((_domain: any) => {
-        return _domain.locations.filter((location: any) => {
-          return !location.availability.includes(dayMap[calculateTime()])
-        }).map((location: any) => {
-          const { name, previewImageUrl, recommendedElements, wikiUrl } = _domain
-          return {
-            domainName: name,
-            domainPreviewImage: previewImageUrl,
-            recommendedElements,
-            wikiUrl,
-            location,
-          }
-        })
-      })
-    })
 
-    return locations;
-  }
+  const getUnavailableDomains = (db: { domains: { [key: string]: Domain[] } }): CustomLocation[] => {
+    const currentDay = calculateTime();
+
+    return Object.entries(db.domains)
+      .flatMap(([_, singleDomain]) =>
+        singleDomain.flatMap((domain) =>
+          domain.locations
+            .filter((location) => !location.availability.includes(dayMap[currentDay]))
+            .map((location) => ({
+              domainName: domain.name,
+              domainPreviewImage: domain.previewImageUrl,
+              recommendedElements: domain.recommendedElements,
+              wikiUrl: domain.wikiUrl,
+              location,
+            }))
+        )
+      );
+  };
 
 
 
