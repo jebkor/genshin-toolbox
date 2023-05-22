@@ -62,11 +62,7 @@
   })
 
   const getAvailableDomains = (db: any) => {
-    console.log('db.domains: ', db.domains)
-    console.log('wenfiw: ', Object.entries(db.domains))
     const locations = Object.entries(db.domains).flatMap(([domain, singleDomain]) => {
-      console.log('domain: ', domain)
-      console.log('singleDomain: ', singleDomain)
       return singleDomain.flatMap((_domain: any) => {
         return _domain.locations.filter((location: any) => {
           return location.availability.includes(dayMap[calculateTime()])
@@ -84,69 +80,27 @@
     })
 
     return locations;
-    // const locations = [];
-
-    // // loop over the json object
-    // for (const domain in db.domains) {
-    //   if (Object.prototype.hasOwnProperty.call(db.domains, domain)) {
-    //     const singleDomain = db.domains[domain]; // forgery, mastery ect...
-
-    //     // Loop over the forgery or mastery domains
-    //     for (const _domain of singleDomain) {
-
-    //       // Loop over the locations on each domain
-    //       for (const location of _domain.locations) {
-
-    //         // If the location has an availability of currentDay, push it to the array
-    //         if (location.availability.includes(dayMap[calculateTime()])) {
-    //           let custom = {
-    //             domainName: _domain.name,
-    //             domainPreviewImage: _domain.previewImageUrl,
-    //             recommendedElements: _domain.recommendedElements,
-    //             wikiUrl: _domain.wikiUrl,
-    //             location: location
-    //           }
-    //           locations.push(custom);
-    //         }
-    //       }
-    //     }
-    //   }
-    // }
-
-    // return locations;
   }
 
 
 
   const getUnavailableDomains = (db: any) => {
-    const locations = [];
-
-    // loop over the json object
-    for (const domain in db.domains) {
-      if (Object.prototype.hasOwnProperty.call(db.domains, domain)) {
-        const singleDomain = db.domains[domain]; // forgery, mastery ect...
-
-        // Loop over the forgery or mastery domains
-        for (const _domain of singleDomain) {
-
-          // Loop over the locations on each domain
-          for (const location of _domain.locations) {
-
-            // If the location has an availability of currentDay, push it to the array
-            if (!location.availability.includes(dayMap[calculateTime()])) {
-              let custom = {
-                domainName: _domain.name,
-                domainPreviewImage: _domain.previewImageUrl,
-                recommendedElements: _domain.recommendedElements,
-                wikiUrl: _domain.wikiUrl,
-                location: location
-              }
-              locations.push(custom);
-            }
+    const locations = Object.entries(db.domains).flatMap(([domain, singleDomain]) => {
+      return singleDomain.flatMap((_domain: any) => {
+        return _domain.locations.filter((location: any) => {
+          return !location.availability.includes(dayMap[calculateTime()])
+        }).map((location: any) => {
+          const { name, previewImageUrl, recommendedElements, wikiUrl } = _domain
+          return {
+            domainName: name,
+            domainPreviewImage: previewImageUrl,
+            recommendedElements,
+            wikiUrl,
+            location,
           }
-        }
-      }
-    }
+        })
+      })
+    })
 
     return locations;
   }
